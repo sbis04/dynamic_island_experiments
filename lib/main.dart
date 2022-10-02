@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 /// Please ignore the other files, the updated version is present
 /// just in this file.
-///
+/// 
 /// WIP: The code can be improved a lot, this is a very rough implementation
 void main() => runApp(const MyApp());
 
@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage>
   final scrollController = ScrollController();
   bool isScrollNegative = false;
   bool isStart = false;
-  int itemCount = 2;
+  int itemCount = 3;
 
   @override
   void initState() {
@@ -54,8 +54,10 @@ class _HomePageState extends State<HomePage>
     animation = Tween<double>(begin: 60, end: 0).animate(curve)
       ..addListener(() {
         if (animationController.isCompleted && hasDragEnded) {
+          // print('reset');
           animationController.reset();
         }
+        // print('STATUS: ${animationController.status}');
       });
 
     super.initState();
@@ -63,7 +65,7 @@ class _HomePageState extends State<HomePage>
 
   startAction() async {
     setState(() => isRefreshing = true);
-
+    // Explicit delay added to demo the functionality
     await Future.delayed(const Duration(seconds: 4), () {});
     listKey.currentState
         ?.insertItem(itemCount, duration: const Duration(milliseconds: 500));
@@ -79,6 +81,8 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      // body: DynamicIslandWrapper(
+      // ),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onVerticalDragUpdate: (details) {
@@ -100,6 +104,7 @@ class _HomePageState extends State<HomePage>
             startAction();
           }
           if (animationController.isCompleted) {
+            // print('reset');
             animationController.reset();
           }
           setState(() {
@@ -121,6 +126,7 @@ class _HomePageState extends State<HomePage>
                       clipBehavior: Clip.none,
                       alignment: AlignmentDirectional.center,
                       children: [
+                        // Dynamic Island
                         AnimatedContainer(
                           onEnd: () {
                             setState(() {
@@ -141,8 +147,9 @@ class _HomePageState extends State<HomePage>
                                       (min(dragDownValue.toDouble() / 1.4, 80) /
                                           220),
                         ),
+                        // Beizer Curved Container
                         Positioned(
-                          top: 36 / 1.1,
+                          top: 36 / 1.1, // dynamic island height
                           child: ClipPath(
                             clipper: CurveClipper(),
                             child: Container(
@@ -163,8 +170,15 @@ class _HomePageState extends State<HomePage>
                   ),
                 ),
                 Column(
+                  // mainAxisSize: MainAxisSize.min,
                   children: [
                     AnimatedPadding(
+                      // onEnd: () {
+                      //   if (!isRefreshing) {
+                      //     print(
+                      //         'Padding anim end, isRefreshing: $isRefreshing');
+                      //   }
+                      // },
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOut,
                       padding: EdgeInsets.only(
@@ -207,25 +221,71 @@ class _HomePageState extends State<HomePage>
                         child: NotificationListener<ScrollNotification>(
                           onNotification: (scrollNotification) {
                             if (scrollNotification is ScrollStartNotification) {
+                              // print(
+                              //     'START, ${scrollNotification.metrics.pixels}');
                               isStart = true;
                             }
-
+                            // print('isStart: $isStart');
                             if (scrollNotification
                                 is ScrollUpdateNotification) {
+                              // print(
+                              //     'UPDATE, ${scrollNotification.metrics.pixels}');
                               if (isStart &&
                                   scrollNotification.metrics.pixels < 0) {
                                 setState(() => isScrollNegative = true);
                                 isStart = false;
                               }
                             }
-
+                            // if (scrollNotification is ScrollEndNotification) {
+                            //   setState(() => isScrollNegative = false);
+                            // }
                             return true;
                           },
+                          // onNotification: (scrollNotification) {
+                          //   if (scrollNotification is ScrollStartNotification) {
+                          //   } else if (scrollNotification
+                          //       is ScrollUpdateNotification) {
+                          //     print(
+                          //         'UPDATE, ${scrollNotification.metrics.pixels}');
+                          //     double scrollValue =
+                          //         scrollNotification.metrics.pixels;
+                          //     if (scrollValue > 0 || isRefreshing) return true;
+                          //     double scrollValueAbs = scrollValue.abs();
+                          //     setState(() {
+                          //       dragDownValue = scrollValueAbs;
+                          //       hasDragEnded = false;
+                          //     });
+                          //     if (dragDownValue >= 220 &&
+                          //         ![
+                          //           AnimationStatus.forward,
+                          //           AnimationStatus.completed
+                          //         ].contains(animationController.status)) {
+                          //       animationController.forward();
+                          //     }
+                          //   } else if (scrollNotification
+                          //       is ScrollEndNotification) {
+                          //     print('END, ${scrollNotification.metrics.pixels}');
+                          //     if (dragDownValue > 250) {
+                          //       startAction();
+                          //     }
+                          //     if (animationController.isCompleted) {
+                          //       print('reset');
+                          //       animationController.reset();
+                          //     }
+                          //     setState(() {
+                          //       dragDownValue = 0;
+                          //       hasDragEnded = true;
+                          //     });
+                          //   }
+                          //   return true;
+                          // },
                           child: AnimatedList(
                             key: listKey,
                             initialItemCount: itemCount,
+                            // physics: const NeverScrollableScrollPhysics(),
                             controller: scrollController,
                             shrinkWrap: true,
+                            // itemCount: itemCount,
                             itemBuilder: (context, index, animation) =>
                                 SlideTransition(
                               position: Tween<Offset>(
@@ -334,9 +394,10 @@ class CurveClipper extends CustomClipper<Path> {
     double h = size.height;
 
     final path = Path();
-
+    // path.lineTo(w / 6, 0); // 2
     path.quadraticBezierTo(w / 2, h, w, 0);
-
+    // path.lineTo(w, h); // 3
+    // path.lineTo(w, 0); // 5
     path.close();
     return path;
   }
